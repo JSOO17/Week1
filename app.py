@@ -241,14 +241,14 @@ def ranking_best_movie():
     try:   
         with open('movie_metadata.csv', encoding="utf8") as f:
             reader = ignore_first(csv.reader(f))
-            movie_list = (list({"name_movie": row[11], "votes": int(row[12])} for row in reader))
-            new_list = sorted(movie_list, key=lambda i: i["votes"], reverse=True)
+            movie_list = (list({"name_movie": row[11], "scored": float(row[25])} for row in reader))
+            new_list = sorted(movie_list, key=lambda i: i["scored"], reverse=True)
             ranking_ten_list = new_list[:10]
             rank = 0
             print("\nRanking best movies \n")
             for movie in ranking_ten_list:
                 rank = rank + 1
-                print("Rank {0} is {1} with {2} votes".format(rank, movie.get("name_movie"), movie.get("votes")))
+                print("Rank {0} is {1} with {2} scored".format(rank, movie.get("name_movie"), movie.get("scored")))
                 
     except UnicodeDecodeError:
         print("could not fetching")
@@ -261,25 +261,27 @@ def search_by_tags(tags):
     try:   
         with open('movie_metadata.csv', encoding="utf8") as f:
             reader = ignore_first(csv.reader(f))
-            movie_list = (list(row[11] for row in reader))
-            movies = []
-            for movie in movie_list:
+            key_words = (list({"movie": row[10], "key_words": row[16]} for row in reader))
+            words = []
+            
+            for key_word in key_words:
                 for tag in tags:
-                    movie_iterable = movie.split()
-                    if tag in movie_iterable:
-                        if movie not in movies:
-                            movies.append(movie)
-            ten_list = movies[:10]
+                    key_words_iterable = key_word.get("key_words").split("|")
+                    if tag in key_words_iterable:
+                        if key_word not in words:
+                            words.append(key_word)
+            ten_list = words[:10]
             if ten_list:
                 rank = 0
                 print("\nResults search by tags {0} \n".format(", ".join(tags)))
                 for movie in ten_list:
                     rank = rank + 1
-                    print(movie + "\n")
+                    print(movie.get("movie") + "\n")
             else:
                 print("there aren´t results")     
     except UnicodeDecodeError:
         print("could not fetching")
+
 
 def genre_money(year, less=True):
     """
@@ -316,6 +318,64 @@ def genre_money(year, less=True):
     except UnicodeDecodeError:
         print("could not fetching")
 
+
+def genre_like_most():
+    """
+       What movie genre does the public like most?
+    """
+    try:   
+        with open('movie_metadata.csv', encoding="utf8") as f:
+            reader = ignore_first(csv.reader(f))
+
+            genres_dicts = [] 
+
+            for row in reader:
+                if(row[23]):
+                    genres = row[9].split("|")
+                    for genre in genres:
+                        if genre not in list(x.get('genre') for x in genres_dicts):
+                            genres_dicts.append({"genre": genre, "scored": float(row[25])})
+                        else:
+                            for genre_dict in genres_dicts:
+                                if genre_dict.get("genre") == genre:
+                                    genre_dict["scored"] = genre_dict.get("scored") + float(row[25])
+
+            if genres_dicts:
+                new_list = sorted(genres_dicts, key=lambda i: i["scored"], reverse=True)
+                print("\n The movie genre that people like the most is {0} \n".format(new_list[0].get("genre")))               
+        
+    except UnicodeDecodeError:
+        print("could not fetching")
+
+
+def top_reputation_directors():
+    """
+       Which are the top five best reputation directors?
+    """
+    try:   
+        with open('movie_metadata.csv', encoding="utf8") as f:
+            reader = ignore_first(csv.reader(f))
+            director_list = (list({"director": row[10], "scored": (float(row[4]) + float(row[25])) / 2 } for row in reader if row[4] and row[25]))
+            directors = []
+            for director in director_list:
+                if director.get('director') not in (list(x.get('director') for x in directors)):
+                    directors.append({"director": director.get('director'), "scored": director.get('scored')})
+                else:
+                    director_list.remove(director)
+            
+            new_list = sorted(directors, key=lambda i: i['scored'], reverse=True)
+
+            top_five = new_list[:5]
+
+            if directors:
+                print(" \n Top 5 the best directors \n")
+                top = 0
+                for director in top_five:
+                    top = top + 1
+                    print("Top {0} is {1} with {2} scored".format(top, director.get("director"), director.get("scored")))
+    except UnicodeDecodeError:
+        print("could not fetching")
+
 #field_count(field=0, filter=" Black and White")
 
 #field_count(field=1, filter="Director")
@@ -338,10 +398,14 @@ def genre_money(year, less=True):
 
 #ranking_actors_influence()
 
-#ranking_best_movie()}
+#ranking_best_movie()
 
-#search_by_tags(["Lot", "Like"])
+#search_by_tags(["future", "epic"])
 
 #genre_money(2014)
 
 #genre_money(2013, less=False)
+
+#genre_like_most()
+
+top_reputation_directors()
