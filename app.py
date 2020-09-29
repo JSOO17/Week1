@@ -6,7 +6,7 @@ def ignore_first(reader):
     return data
 
 
-def field_count(field, filter):
+def field_count(field: int, filter: str):
     """
         Filter into one column
 
@@ -14,7 +14,7 @@ def field_count(field, filter):
 
         @filter: phrase to filter
     """
-    try:   
+    try:
         with open('movie_metadata.csv', encoding="utf8") as f:
             reader = csv.reader(f)
             count = 0
@@ -258,12 +258,14 @@ def search_by_tags(tags):
     """
         search by tags into names of movies
     """
-    try:   
+    try:
         with open('movie_metadata.csv', encoding="utf8") as f:
             reader = ignore_first(csv.reader(f))
-            key_words = (list({"movie": row[10], "key_words": row[16]} for row in reader))
+            key_words = (list({
+                                "movie": row[10],
+                                "key_words": row[16]
+                            } for row in reader))
             words = []
-            
             for key_word in key_words:
                 for tag in tags:
                     key_words_iterable = key_word.get("key_words").split("|")
@@ -273,14 +275,16 @@ def search_by_tags(tags):
             ten_list = words[:10]
             if ten_list:
                 rank = 0
-                print("\nResults search by tags {0} \n".format(", ".join(tags)))
+                rank_text = "\n Results search by tags {0} \n"
+                print(rank_text.format(", ".join(tags)))
                 for movie in ten_list:
                     rank = rank + 1
                     print(movie.get("movie") + "\n")
             else:
-                print("there aren´t results")     
+                print("there aren´t results")
     except UnicodeDecodeError:
         print("could not fetching")
+
 
 
 def genre_money(year, less=True):
@@ -381,18 +385,28 @@ def top_reputation_directors():
     """
        Which are the top five best reputation directors?
     """
-    try:   
+    try:
         with open('movie_metadata.csv', encoding="utf8") as f:
             reader = ignore_first(csv.reader(f))
-            director_list = (list({"director": row[1], "scored": (float(row[4]) + float(row[25])) / 2 } for row in reader if row[4] and row[25]))
+            director_list = (list({
+                    "director": row[1],
+                    "scored": (float(row[4]) + float(row[25])) / 2
+                } for row in reader if row[4] and row[25]))
             directors = []
             for director in director_list:
-                if director.get('director') not in (list(x.get('director') for x in directors)):
-                    directors.append({"director": director.get('director'), "scored": director.get('scored')})
+                iterable = (list(x.get('director') for x in directors))
+                if director.get('director') not in iterable:
+                    directors.append({
+                                        "director": director.get('director'),
+                                        "scored": director.get('scored')
+                                    })
                 else:
                     director_list.remove(director)
-            
-            new_list = sorted(directors, key=lambda i: i['scored'], reverse=True)
+            new_list = sorted(
+                                directors,
+                                key=lambda i: i['scored'],
+                                reverse=True
+                            )
 
             top_five = new_list[:5]
 
@@ -401,9 +415,13 @@ def top_reputation_directors():
                 top = 0
                 for director in top_five:
                     top = top + 1
-                    print("Top {0} is {1} with {2} scored".format(top, director.get("director"), director.get("scored")))
+                    top_director = director.get("director")
+                    top_scored = director.get("scored")
+                    top_text = "Top {0} is {1} with {2} scored"
+                    print(top_text.format(top, top_director, top_scored))
     except UnicodeDecodeError:
         print("could not fetching")
+
 
 #field_count(field=0, filter=" Black and White")
 
