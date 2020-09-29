@@ -319,6 +319,35 @@ def genre_money(year, less=True):
         print("could not fetching")
 
 
+def top_actors():
+    """
+       Top five ranking of actors by performance and popularity
+    """
+    try:   
+        with open('movie_metadata.csv', encoding="utf8") as f:
+            reader = ignore_first(csv.reader(f))
+            actor_list = (list({"actor": row[10], "scored": (float(row[4]) + float(row[25])) / 2 } for row in reader if row[4] and row[25]))
+            actors = []
+            for actor in actor_list:
+                if actor.get('actor') not in (list(x.get('actor') for x in actors)):
+                    actors.append({"actor": actor.get('actor'), "scored": actor.get('scored')})
+                else:
+                    actor_list.remove(actor)
+            
+            new_list = sorted(actors, key=lambda i: i['scored'], reverse=True)
+
+            top_five = new_list[:5]
+
+            if actors:
+                print(" \n Top 5 the best actors \n")
+                top = 0
+                for actor in top_five:
+                    top = top + 1
+                    print("Top {0} is {1} with {2} scored".format(top, actor.get("actor"), actor.get("scored")))
+    except UnicodeDecodeError:
+        print("could not fetching")
+
+
 def genre_like_most():
     """
        What movie genre does the public like most?
@@ -355,7 +384,7 @@ def top_reputation_directors():
     try:   
         with open('movie_metadata.csv', encoding="utf8") as f:
             reader = ignore_first(csv.reader(f))
-            director_list = (list({"director": row[10], "scored": (float(row[4]) + float(row[25])) / 2 } for row in reader if row[4] and row[25]))
+            director_list = (list({"director": row[1], "scored": (float(row[4]) + float(row[25])) / 2 } for row in reader if row[4] and row[25]))
             directors = []
             for director in director_list:
                 if director.get('director') not in (list(x.get('director') for x in directors)):
@@ -409,3 +438,5 @@ def top_reputation_directors():
 #genre_like_most()
 
 top_reputation_directors()
+
+top_actors()
